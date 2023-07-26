@@ -1,73 +1,94 @@
 import { useState } from "react";
 import "./App.css";
-import contactsData from "./contacts.json";
+import contactsJSON from "./contacts.json";
 
 function App() {
-  const [contacts, setContacts] = useState(contactsData.slice(0, 5));
-  const [contactsDataFiltered, setContactsDataFiltered] = useState(contactsData);
+  const [contacts, setContacts] = useState(contactsJSON.slice(0, 5));
+  const [remaining, setRemaining] = useState(contactsJSON.slice(5));
+  const [alpha, setAlpha] = useState(true); 
+ 
+  const addContact = () => {
+    const randomIndex = Math.floor(Math.random() * remaining.length);
+    const RandomContact = remaining[randomIndex];
+    setContacts([RandomContact, ...contacts]); 
+    const newRemaining = remaining.filter(contact => {
+      if (contact.id !== RandomContact.id) {
+        return contact; 
+      }
+    });
+    setRemaining(newRemaining);
+  };
 
-  function addRandomContact() {
-    const contactsFiltered = contactsData.filter(
-      (contactData) => !contacts.some((contact) => contact.id === contactData.id)
-    );
-    setContactsDataFiltered(contactsFiltered);
-    setContacts([
-      ...contacts,
-      contactsFiltered[Math.floor(Math.random() * contactsFiltered.length)],
-    ]);
-  }
+  const sortContactsName = () => {
+    const deepCopy = JSON.parse(JSON.stringify(contacts));
+    if (alpha) {
+      const sortedArr = deepCopy.sort((a, b) => a.name.localeCompare(b.name));  
+      // const sortedArr = deepCopy.sort((a, b) => a.name.localeCompare(b.name)); 
+    } else {
+      const sortedArr = deepCopy.sort((a, b) => {
+        if (a.name < b.name) {
+          return -1;
+        } else if (a.name > b.name) {
+          return 1;
+        } else {
+          return 0;
+        }
+        });
+       setContacts(sortedArr); 
+      }
+      setAlpha(!alpha);
+    }; 
 
-  function sortByPopularity() {
-    const contactsSorted = [...contacts].sort((a, b) => b.popularity - a.popularity);
-    setContacts(contactsSorted);
-  }
+    const deleteContact = (contactId) => {
+      console.log("delete this person", contactId);
+      const filteredContacts = contacts.filter((filterContact) => {
+        if (filterContact.id !== contactId) {
+          return filterContact; 
+        }
+      }); 
+      console.log("filtered contacts", filteredContacts); 
+      setContacts(filteredContacts); 
+    }; 
 
-  function sortByName() {
-    const contactsSorted = [...contacts].sort((a, b) => a.name.localeCompare(b.name));
-    setContacts(contactsSorted);
-  }
-
-  function removeContact(id) {
-    setContacts(contacts.filter((contact) => contact.id !== id));
-  }
   return (
     <div className="App">
-      <h1>LAB | React IronContacts</h1>
-      {contactsDataFiltered.length > 1 && (
-        <button onClick={addRandomContact}>Add Random Contact</button>
-      )}
+      <h1>IronContacts</h1>
+        <button onClick={addContact}>Add Random Contact</button>
       <button onClick={sortByPopularity}>Sort by popularity</button>
-      <button onClick={sortByName}>Sort by name</button>
-      {contacts.length > 0 && (
-        <table>
+      <button onClick={sortByName}> {alpha ? "Sort Alpha" : "Sort Rev Alpha"} </button>
+      <br></br>
+      <br></br>
+      <table>
           <thead>
             <tr>
               <th>Picture</th>
               <th>Name</th>
               <th>Popularity</th>
-              <th>Won Oscar</th>
-              <th>Won Emmy</th>
+              <th>Oscar</th>
+              <th>Emmy</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {contacts.map((contact) => (
+          <br></br>
+            {contacts.map((contact) => { 
+              return (
               <tr key={contact.id}>
                 <td>
-                  <img className="contact__img" src={contact.pictureUrl} alt="actor" />
+                  <img className="contact__img" src={contact.pictureUrl} alt="actor" style ={{ height:"100px"}} />
                 </td>
-                <td>{contact.name}</td>
-                <td>{Math.round(contact.popularity * 100) / 100}</td>
-                <td>{contact.wonOscar && <span>🏆</span>}</td>
-                <td>{contact.wonEmmy && <span>🌟</span>}</td>
+                <td><h3>{contact.name}</h3></td>
+                <td><h3>{contact.popularity}</h3> </td>
+                <td>{contact.wonOscar ? "🏆" : null}</td>
+                <td>{contact.wonEmmy ? "🌟" : null}</td>
                 <td>
                   <button onClick={() => removeContact(contact.id)}>Delete</button>
                 </td>
               </tr>
-            ))}
+           );
+            })}
           </tbody>
         </table>
-      )}
     </div>
   );
 }
